@@ -1,1 +1,1 @@
-# desktop-app
+# gouvernance-desktop
