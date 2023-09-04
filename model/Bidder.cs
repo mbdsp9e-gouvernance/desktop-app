@@ -5,4 +5,5 @@ public class Bidder
     public Tender tender { get; set; }
     public string dateSoumission { get; set; }
     public int status { get; set; }
+    public string[] files { get; set; }
 }

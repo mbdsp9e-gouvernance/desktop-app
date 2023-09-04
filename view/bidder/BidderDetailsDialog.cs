@@ -2,6 +2,7 @@ namespace EGouvernance;
 
 using System.Text;
 using System.Text.Json;
+using System.Net;
 
 
 public class BidderDetailsDialog : Form
@@ -10,6 +11,7 @@ public class BidderDetailsDialog : Form
     public string name { get; private set; }
     public string nif { get; private set; }
     public string stat { get; private set; }
+    public string[] files { get; private set; }
 
     private string bidderId;
 
@@ -34,16 +36,17 @@ public class BidderDetailsDialog : Form
         bidderId = bidder.id;
         tender = bidder.tender;
         society = bidder.society;
+        files = bidder.files;
 
         // Initialiser les contrôles de la boîte de dialogue
-        InitializeComponent(name, nif, stat);
+        InitializeComponent(name, nif, stat, files);
 
         // Ajuster la taille de la boîte de dialogue en fonction du contenu
         this.ClientSize = new System.Drawing.Size(700, 300);
 
     }
 
-    private void InitializeComponent(string name, string nif, string stat)
+    private void InitializeComponent(string name, string nif, string stat, string[] files)
     {
         this.panelListView = new Panel();
         this.listViewDocs = new ListView();
@@ -52,12 +55,12 @@ public class BidderDetailsDialog : Form
 
 
         // Ajouter le bouton "download"
-        this.btnDownload = new Button();
-        this.btnDownload.Location = new System.Drawing.Point(10, 265);
-        this.btnDownload.Size = new System.Drawing.Size(200, 25);
-        this.btnDownload.Text = "Télécharger les documents";
-        this.btnDownload.Click += new EventHandler(btnDownload_Click);
-        this.Controls.Add(this.btnDownload);
+        // this.btnDownload = new Button();
+        // this.btnDownload.Location = new System.Drawing.Point(10, 265);
+        // this.btnDownload.Size = new System.Drawing.Size(200, 25);
+        // this.btnDownload.Text = "Télécharger les documents";
+        // this.btnDownload.Click += new EventHandler(btnDownload_Click);
+        // this.Controls.Add(this.btnDownload);
 
         // Ajouter le bouton "Rejeter"
         this.btnDecline = new Button();
@@ -75,7 +78,7 @@ public class BidderDetailsDialog : Form
         this.btnAccept.Click += new EventHandler(btnAccepts_Click);
         this.Controls.Add(this.btnAccept);
 
-        InitializeDialogContent(name, nif, stat);
+        InitializeDialogContent(name, nif, stat, files);
 
         // Panel for holding the list view with scroll
         this.panelListView.Location = new System.Drawing.Point(10, 70);
@@ -93,7 +96,7 @@ public class BidderDetailsDialog : Form
         // this.listViewDocs.SelectedIndexChanged += new EventHandler(listViewBidders_SelectedIndexChanged);
         this.panelListView.Controls.Add(this.listViewDocs);
 
-        this.FetchBidderDetails(society.id);
+        // this.FetchBidderDetails(society.id);
 
         this.ResumeLayout(false);
 
@@ -124,7 +127,7 @@ public class BidderDetailsDialog : Form
         }
     }
 
-    private void InitializeDialogContent(string name, string nif, string stat)
+    private void InitializeDialogContent(string name, string nif, string stat, string[] files)
     {
         this.Text = "E-Gouvernance - Détails de l'appel d'offre";
 
@@ -147,7 +150,31 @@ public class BidderDetailsDialog : Form
         lblStat.AutoSize = true;
         this.Controls.Add(lblStat);
 
+        listViewDocs.ItemSelectionChanged += new ListViewItemSelectionChangedEventHandler(listViewDocs_ItemSelectionChanged);
+        foreach(var file in files) {
+            listViewDocs.Items.Add(new ListViewItem(file));
+        }
+
     }
+
+    private void listViewDocs_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            if (e.IsSelected)
+            {
+                // Récupérer les détails de l'élément sélectionné
+                ListViewItem selectedItem = e.Item;
+                string fileName = selectedItem.SubItems[0].Text;
+                var dialog = new SaveFileDialog();
+                dialog.FileName = fileName;
+                var result = dialog.ShowDialog(); //shows save file dialog
+                if(result == DialogResult.OK)
+                {
+                    WebClient webClient = new WebClient();
+                    webClient.DownloadFile(AppConfig.FilesUrl+"/"+fileName, dialog.FileName);
+                }
+
+            }
+        }
 
     private async void bidderValidation(String statusUpdate, String message)
     {

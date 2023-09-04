@@ -144,7 +144,6 @@ namespace EGouvernance
                 {
                     if (id == bid.id)
                     {
-
                         bidder = bid;
                     }
                 }
